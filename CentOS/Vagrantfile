@@ -1,0 +1,58 @@
+Vagrant.configure("2") do |config|
+	config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+	config.vm.define "control" do |control|
+		control.vm.box = "centos/7"
+		control.vbguest.installer_options = { allow_kernel_upgrade: true }
+		control.vm.network "private_network", ip: "192.168.29.100"
+		control.vm.hostname = "control.example.com"
+		control.vm.provider :virtualbox do |vb|
+			vb.customize ["modifyvm", :id, "--memory", "1024"]
+			vb.customize ["modifyvm", :id, "--cpus", "1"]
+		end
+		control.vm.provision "shell", inline: <<-SHELL
+			sudo echo "192.168.29.100 control.example.com control" | sudo tee -a /etc/hosts
+			sudo echo "192.168.29.101 ansible1.example.com ansible1" | sudo tee -a /etc/hosts
+			sudo echo "192.168.29.102 ansible2.example.com ansible2" | sudo tee -a /etc/hosts
+			sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+			sudo systemctl restart sshd
+			sudo yum -y -q install epel-release
+			sudo yum -y -q install ansible
+		SHELL
+	end
+
+	config.vm.define "ansible1" do |ansible1|
+		ansible1.vm.box = "centos/7"
+		ansible1.vbguest.installer_options = { allow_kernel_upgrade: true }		
+		ansible1.vm.network "private_network", ip: "192.168.29.101"
+		ansible1.vm.hostname = "ansible1.example.com"
+		ansible1.vm.provider :virtualbox do |vb|
+			vb.customize ["modifyvm", :id, "--memory", "1024"]
+			vb.customize ["modifyvm", :id, "--cpus", "1"]
+		end
+		ansible1.vm.provision "shell", inline: <<-SHELL
+			sudo echo "192.168.29.100 control.example.com control" | sudo tee -a /etc/hosts
+			sudo echo "192.168.29.101 ansible1.example.com ansible1" | sudo tee -a /etc/hosts
+			sudo echo "192.168.29.102 ansible2.example.com ansible2" | sudo tee -a /etc/hosts
+			sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+			sudo systemctl restart sshd
+		SHELL
+	end
+
+	config.vm.define "ansible2" do |ansible2|
+		ansible2.vm.box = "centos/7"
+		ansible2.vbguest.installer_options = { allow_kernel_upgrade: true }		
+		ansible2.vm.network "private_network", ip: "192.168.29.102"
+		ansible2.vm.hostname = "ansible2.example.com"
+		ansible2.vm.provider :virtualbox do |vb|
+			vb.customize ["modifyvm", :id, "--memory", "1024"]
+			vb.customize ["modifyvm", :id, "--cpus", "1"]
+		end
+		ansible2.vm.provision "shell", inline: <<-SHELL
+			sudo echo "192.168.29.100 control.example.com control" | sudo tee -a /etc/hosts
+			sudo echo "192.168.29.101 ansible1.example.com ansible1" | sudo tee -a /etc/hosts
+			sudo echo "192.168.29.102 ansible2.example.com ansible2" | sudo tee -a /etc/hosts
+			sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+			sudo systemctl restart sshd
+		SHELL
+	end
+end
