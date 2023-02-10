@@ -1,2 +1,2 @@
 # vagrant
-Vagrant sandbox
+Vagrant sandbox.
